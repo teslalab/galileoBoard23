@@ -1,1 +1,1 @@
-# galileoBoard23
+# Galileo Board 23
