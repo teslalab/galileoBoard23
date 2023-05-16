@@ -37,13 +37,14 @@ ported for sparkfun esp32
 //Librerias necesarias para WiFi
 #include <WiFi.h>
 
-//Librerias y seteo para BME280
+//Librerias y seteo para BME680
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
+#include <Adafruit_BME680.h>
 #define SEALEVELPRESSURE_HPA (1013.25)
 
-Adafruit_BME280 bme;
+Adafruit_BME680 bme;
+
 
 
 //Librerias necesarias para NEOPIXEL
@@ -63,7 +64,7 @@ const char* password = "CompraTuInternet";
 //Definicion de pin para buzzer
 int pinBuzzer = 18;     // Numero del pin digital conectado el buzzer
 int frecuencia = 2000;  // Esta en Hertz
-int duracion = 2000;    // Valor en milisegundos
+int duracion = 1000;    // Valor en milisegundos
 
 ///Definicion de webserver
 WiFiServer server(80);
@@ -141,14 +142,23 @@ void setup()
     pixels.show(); 
 
 // Verificar si BME está encendido
-if (!bme.begin(0x77)) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+while (!Serial);
+  Serial.println(F("BME680 test"));
+  if (!bme.begin()) {
+    Serial.println("Could not find a valid BME680 sensor, check wiring!");
     while (1);
   }
 
+  // configuración del set del BME680
+  bme.setTemperatureOversampling(BME680_OS_8X);
+  bme.setHumidityOversampling(BME680_OS_2X);
+  bme.setPressureOversampling(BME680_OS_4X);
+  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+  bme.setGasHeater(320, 150); // 320*C for 150 ms
+
 }
 
-int value = 0;
+//int value = 0;
 
 void loop(){
  WiFiClient client = server.available();   // listen for incoming clients
@@ -176,10 +186,10 @@ void loop(){
             
             // the content of the HTTP response follows the header:
             client.print("<h1 align=\"center\"> Taller de IoT - Tesla Lab - UGAL </h1>");
-            client.print("<form method=\"get\" action=\"/H1\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; SEC1 </button> </form>");
-            client.print("<form method=\"get\" action=\"/H2\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; SEC2 </button> </form>");
-            client.print("<form method=\"get\" action=\"/L\"> <button style=\"background-color: #00CC00; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; OFF </button> </form>");
-            client.print("<form method=\"get\" action=\"/B\"> <button style=\"background-color: #CC0000; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Probar Buzzer </button> </form>");
+            client.print("<form method=\"get\" action=\"/H1\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Neopixel SEC1 </button> </form>");
+            client.print("<form method=\"get\" action=\"/H2\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Neopixel SEC2 </button> </form>");
+            client.print("<form method=\"get\" action=\"/L\"> <button style=\"background-color: #00CC00; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Neopixel OFF </button> </form>");
+            client.print("<form method=\"get\" action=\"/B\"> <button style=\"background-color: #CC0000; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Probar Buzzer/Motor </button> </form>");
             client.print("<h1 align=\"center\">La temperatura en el ambiente es ");
             client.print(tempParaDesplegar); 
             client.print(" &#176;C </h1>");
@@ -270,7 +280,10 @@ void playNeopixels()
 {
   // Animacion de leds con un color especifico
   for(int i=0;i<NUMPIXELS;i++){
-    pixels.setPixelColor(i, pixels.Color((25+i*15),(50+i*10),(100+i*5)));  // Color en leds turquesa
+    int red = random(0, 255);
+    int blue = random(0, 255);
+    int green = random(0, 255);
+    pixels.setPixelColor(i, pixels.Color(red,green,blue));  // Color en leds turquesa
     pixels.show();                                      //Refrescamos los pixeles
     delay(500);                                         //Retardo de encendido en cada pixel;
   }
