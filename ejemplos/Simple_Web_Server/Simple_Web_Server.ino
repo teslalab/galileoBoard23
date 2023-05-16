@@ -1,12 +1,12 @@
 /*
- Programa completo para implementar WebServer de Control para Tarjeta Smart Home
+ * Programa completo para implementar WebServer de Control para Tarjeta Galileo Board 2023
+ * En este programa se tomó como base el ejemplo SimpleWebServer que ya tenía la tarjeta Feather ESP32 de Adafruit. Se implementó un ejemplo que puede desde un webserver con 4 botones probar
+ el buzzer, neopixeles y extraer informacion del sensor BME680.
+ * Creado por Ángel Isidro y Oscar Rodas / Tesla Lab
+ * Guatemala
+ * Universidad Galileo 2023
 
- En este programa se tomó como base el ejemplo SimpleWebServer que ya tenía la tarjeta Feather ESP32 de Adafruit. Se implementó un ejemplo que puede desde un webserver con 4 botones probar
- el buzzer, el relé izquierdo, los LEDs y extraer informacion del sensor BME280.
-
- Creado por Ángel Isidro y Oscar Rodas / Tesla Lab
- Guatemala
- Universidad Galileo 2019
+  Código de referencia ----
  
  WiFi Web Server LED Blink
 
@@ -54,17 +54,14 @@ Adafruit_BME280 bme;
 
 //Configuracion de Red WiFi
 
-const char* ssid     = "PSI_2_4";
-const char* password = "PSI02019";
+//const char* ssid     = "";
+//const char* password = "";
 
-//const char* ssid     = "Minion2";
-//const char* password = "minion6543";
-
-//Definicion de pin para rele
-int releIzquierdo = 12;
+const char* ssid     = "Minion2";
+const char* password = "CompraTuInternet";
 
 //Definicion de pin para buzzer
-int pinBuzzer = 14;     // Numero del pin digital conectado el buzzer
+int pinBuzzer = 18;     // Numero del pin digital conectado el buzzer
 int frecuencia = 2000;  // Esta en Hertz
 int duracion = 2000;    // Valor en milisegundos
 
@@ -72,9 +69,9 @@ int duracion = 2000;    // Valor en milisegundos
 WiFiServer server(80);
 
 //Definicion de pines para LEDS
-#define PIN 15 //PIN en el cual esta conectado el NEO PIXEL
+#define PIN 14 //PIN en el cual esta conectado el NEO PIXEL
 
-#define NUMPIXELS 10 // Numero de NEO PIXEL conectados
+#define NUMPIXELS 6 // Numero de NEO PIXEL conectados
 
 // Creamos un objeto de tipo NEO PIXEL
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
@@ -86,11 +83,6 @@ void setup()
     
 
 //    pinMode(5, OUTPUT);
-
-//  Seteamos pin para rele izquierdo    
-    pinMode(releIzquierdo,OUTPUT);
-
-    delay(10);
 
 // Inicializamos la libreria de NEO PIXEL
     pixels.begin(); 
@@ -111,7 +103,7 @@ void setup()
         delay(500);
         Serial.print(".");
         // Mostrar intento de conexion
-        pixels.setPixelColor(9, pixels.Color(255,0,0));   //Color LED color rojo
+        pixels.setPixelColor(0, pixels.Color(255,0,0));   //Color LED color rojo
         pixels.show(); //Refrescamos los pixeles
         delay(250); //Retardo de encendido en cada pixel;
         pixels.clear();   //Color LED color rojo
@@ -125,7 +117,7 @@ void setup()
     Serial.println(WiFi.localIP());
 
 //  Indicar que se conecto al Internet
-    pixels.setPixelColor(9, pixels.Color(0,255,0));
+    pixels.setPixelColor(1, pixels.Color(0,255,0));
     pixels.show(); //Refrescamos los pixeles
     delay(1000); //Retardo de encendido en cada pixel;
 
@@ -137,10 +129,6 @@ void setup()
 //  Inicializamos el webserver    
     server.begin();
 
-//  Aseguramos que rele izquierdo arranque apagado
-    digitalWrite(releIzquierdo,LOW);
-    delay(500);
-
     //NO TOCAR ESTE CODIGO 
     #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -149,6 +137,8 @@ void setup()
 
 // Inicializamos la libreria de NEO PIXEL
     pixels.begin(); 
+    pixels.clear();
+    pixels.show(); 
 
 // Verificar si BME está encendido
 if (!bme.begin(0x77)) {
@@ -185,11 +175,11 @@ void loop(){
             int tempParaDesplegar = bme.readTemperature();
             
             // the content of the HTTP response follows the header:
-            client.print("<h1 align=\"center\"> Taller de IoT - Ing. Electr&oacute;nica - UGAL </h1>");
-            client.print("<form method=\"get\" action=\"/H\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; ON </button> </form>");
+            client.print("<h1 align=\"center\"> Taller de IoT - Tesla Lab - UGAL </h1>");
+            client.print("<form method=\"get\" action=\"/H1\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; SEC1 </button> </form>");
+            client.print("<form method=\"get\" action=\"/H2\"> <button style=\"background-color: #0000CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; SEC2 </button> </form>");
             client.print("<form method=\"get\" action=\"/L\"> <button style=\"background-color: #00CC00; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Rel&eacute; OFF </button> </form>");
             client.print("<form method=\"get\" action=\"/B\"> <button style=\"background-color: #CC0000; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Probar Buzzer </button> </form>");
-            client.print("<form method=\"get\" action=\"/N\"> <button style=\"background-color: #9955CC; font-size:50px; color:#FFFFFF; height:120px;width:100%\" type=\"submit\"> Probar LEDS </button> </form>");
             client.print("<h1 align=\"center\">La temperatura en el ambiente es ");
             client.print(tempParaDesplegar); 
             client.print(" &#176;C </h1>");
@@ -215,23 +205,26 @@ void loop(){
           currentLine += c;      // add it to the end of the currentLine
         }
 
-        // Verifica si el client request fue "GET /H" para encender el rele
-        if (currentLine.endsWith("GET /H")) {
-          digitalWrite(releIzquierdo,HIGH);
-          delay(1000);
+        // Verifica si el client request fue "GET /H1" para encender neopixeles
+        if (currentLine.endsWith("GET /H1")) {
+            testNeopixels();
+        }
+        // Verifica si el client request fue "GET /H2" para encender neopixeles
+        if (currentLine.endsWith("GET /H2")) {
+            playNeopixels();
         }
         // Verifica si el client request fue "GET /L" para apagar el rele
         if (currentLine.endsWith("GET /L")) {
-          digitalWrite(releIzquierdo,LOW);
-          delay(1000);
+          // Apagar leds con amimacion
+          for(int i=0;i<NUMPIXELS;i++){
+            pixels.setPixelColor(i, pixels.Color(0,0,0));       //Apagamos los LEDs
+            pixels.show(); 
+            delay(100);
+          }
         }
         // Verifica si el client request fue "GET /B" para testear el buzzer
         if (currentLine.endsWith("GET /B")) {         
           myTone(pinBuzzer,frecuencia,duracion);
-        }
-        // Verifica si el client request fue "GET /N" para testear los LEDs
-        if (currentLine.endsWith("GET /N")) {         
-          testNeopixels();
         }
       }
     }
@@ -256,7 +249,8 @@ void myTone(byte pin, uint16_t frequency, uint16_t duration)
   pinMode(pin,INPUT);
 }
 
-void testNeopixels ()
+
+void testNeopixels()
 {
   // Animacion de leds con un color especifico
   for(int i=0;i<NUMPIXELS;i++){
@@ -269,5 +263,15 @@ void testNeopixels ()
     pixels.setPixelColor(i, pixels.Color(0,0,0));       //Apagamos los LEDs
     pixels.show(); 
     delay(100);
+  }
+}
+
+void playNeopixels()
+{
+  // Animacion de leds con un color especifico
+  for(int i=0;i<NUMPIXELS;i++){
+    pixels.setPixelColor(i, pixels.Color((25+i*15),(50+i*10),(100+i*5)));  // Color en leds turquesa
+    pixels.show();                                      //Refrescamos los pixeles
+    delay(500);                                         //Retardo de encendido en cada pixel;
   }
 }
